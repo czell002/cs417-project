@@ -4,44 +4,74 @@ import sys
 
 from importlib import resources
 from parse_temps import parse_raw_temps
+from interpolation import interpolate
+from pathlib import Path
 
 
 def get_input_data() -> tuple[list[float], list[list[float]]]:
-	"""
-	Take an input file provided via the command line and parse the data into a more useful structure.
-	
-	Returns:
-		A tuple containing the parsed time data and core temperature data.
-	"""
-	
+    """
+    Take an input file provided via the command line and parse the data into a more useful structure.
+    
+    Returns:
+        A tuple containing the parsed time data and core temperature data.
+    """
+    
 
-	input_temps = sys.argv[1]
-	
-	# Begin quoted code from T. Kennedy at
-	# https://github.com/cstkennedy/cs417-examples/tree/master/SemesterProject-CPU-Temps/python3
-	with open(input_temps, "r") as temps_file:
-		# ----------------------------------------------------------------------
-		# Split Data, but Better!
-		# ----------------------------------------------------------------------
-		times = []
-		core_data = [[] for _ in range(0, 4)]
-	
-		for time, raw_core_data in parse_raw_temps(temps_file):
-			times.append(time)
-			for core_idx, reading in enumerate(raw_core_data):
-				core_data[core_idx].append(reading)
-		# End quoted code
-		return times, core_data
+    input_temps = sys.argv[1]
+    
+    # Begin quoted code from T. Kennedy at
+    # https://github.com/cstkennedy/cs417-examples/tree/master/SemesterProject-CPU-Temps/python3
+    with open(input_temps, "r") as temps_file:
+        # ----------------------------------------------------------------------
+        # Split Data, but Better!
+        # ----------------------------------------------------------------------
+        times = []
+        core_data = [[] for _ in range(0, 4)]
+    
+        for time, raw_core_data in parse_raw_temps(temps_file):
+            times.append(time)
+            for core_idx, reading in enumerate(raw_core_data):
+                core_data[core_idx].append(reading)
+        # End quoted code
+        return times, core_data
+
+
+def write_to_files(
+    interpolations: list[list[tuple[float, float]]]
+) -> None:
+    """
+    Write the peacewise linear interpolations to text files 
+    
+    Args:
+        interpolations: The list of linear interpolations for all 4 cores
+    """
+    # Define the folder to write new files to
+    output_dir = Path(__file__).resolve().parent.parent / "output"
+    # Make sure the folder exists
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    for core_number, core_n_interpolations in enumerate(interpolations):
+        file_name = f"sample-input-core-{core_number}.txt"
+        with open(output_dir / file_name, "w") as file:
+            for reading_number, (b, m) in enumerate(core_n_interpolations):
+                line_to_write = f"{((reading_number) * 30):>8} <= x <= {((reading_number + 1) * 30):>8} ; "
+                line_to_write += f"y = {b:>12.4f} + {m:>12.4f} x ; interpolation"
+                file.write(f"{line_to_write}\n")
 
 
 def main():
-	"""
-	Main function to demonstrate the use of the parse_raw_temps function and the get_input_data function.
-	"""
-	times, core_data = get_input_data()
-	for time, *temps in list(zip(times, *core_data))[4:]:
-		print(f"{time=} {temps=}")
+    """
+    Main function to demonstrate the use of the parse_raw_temps function and the get_input_data function.
+    """
+    
+    # times, core_data = get_input_data()
+    # for time, *temps in list(zip(times, *core_data)):
+    # 	print(f"{time=} {temps=}")
+    # 	if time == 240:
+    # 		break
+
+    write_to_files(interpolate(get_input_data()))
 
 
 if __name__ == "__main__":
-	main()
+    main()
