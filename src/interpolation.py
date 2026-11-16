@@ -4,7 +4,6 @@
 This module processes the peacewise linear interpolation of data from the
 CPU Temperatures project.
 """
-import numpy as np
 
 
 def _interpolate_point(
@@ -14,8 +13,8 @@ def _interpolate_point(
     y_1: float
 ) -> tuple[float, float]:
     """
-    This function takes in 2 points from x and y, returning the interpolation/line of those
-    points
+    This function takes in 2 points from x and y, returning the interpolation/line between
+    those points. The first float returned is the y-intercept, the second is the slope.
     """
     # print(f"x_0 = {x_0} ; x_1 = {x_1} ; y_0 = {y_0} ; y_1 = {y_1}")
     # Calculate the slope of the line between these two points
@@ -32,7 +31,8 @@ def interpolate(
     times_and_core_data: tuple[list[float], list[list[float]]]
 ) -> list[list[tuple[float, float]]]:
     """
-    Interpolate all the data
+    Create and return peacewise linear interpolations for each time chunk for each list
+    of core temps provided
     
     Args:
         times_and_core_data: A tuple containing the parsed time data and core temperature data.
@@ -50,7 +50,6 @@ def interpolate(
     core_interpolations: list[list[tuple[float, float]]] = []
     
     for core_number, core_n_data in enumerate(core_data):
-        print(f"CORE #{core_number + 1} {'-' * 40}")
         # Evaluate the interpolation of this core for all times
         core_n_interpolation: list[tuple[float, float]] = []
         previous_core_reading: float = core_n_data[0]
